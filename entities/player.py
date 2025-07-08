@@ -15,15 +15,15 @@ import os, pygame
 class Player:
     FRAME_WIDTH  = 64
     FRAME_HEIGHT = 64
-    # how many frames per direction you actually want
+    # how many frames per direction we actually want
     FRAMES_PER_DIR = 3
     # row-order in the sheet
     DIRECTIONS = ["up", "left", "down", "right"]
 
     def __init__(self, x, y):
         # compute the absolute path once
-        project_root    = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        sheet_path      = os.path.join(project_root,
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        sheet_path = os.path.join(project_root,
                                        "assets", "characters", "players",
                                        "walksheet_1.png")
         self.spritesheet = pygame.image.load(sheet_path).convert_alpha()
