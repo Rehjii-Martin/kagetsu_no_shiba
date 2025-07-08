@@ -99,16 +99,14 @@ This project isn't just a clone — it's a **spiritual successor** with a unique
 
 ``` bash
 
-CopyEdit
+`git clone https://github.com/yourusername/kagetsu-shiba.git 
 
-`git clone https://github.com/yourusername/kagetsu-shiba.git cd kagetsu-shiba`
+cd kagetsu-shiba`
 ```
 
 ### 2. Run the Game
 
 ``` bash
-
-CopyEdit
 
 `python core/main.py`
 
