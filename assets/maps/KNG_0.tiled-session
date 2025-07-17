@@ -1,0 +1,38 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "test_map.tmx",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "fileStates": {
+        "test_map.tmx": {
+            "scale": 0.125,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 168,
+                "y": 1204
+            }
+        },
+        "test_map.tmx#Interiors": {
+            "scaleInDock": 1
+        },
+        "test_map.tmx#Interiors_2": {
+            "scaleInDock": 1
+        }
+    },
+    "last.imagePath": "D:/Projects/Kagetsu no Shiba/assets/maps/Modern tiles_Free/Interiors_free/32x32",
+    "map.height": 50,
+    "map.lastUsedFormat": "tmx",
+    "map.width": 50,
+    "openFiles": [
+        "test_map.tmx"
+    ],
+    "project": "KNG_0.tiled-project",
+    "recentFiles": [
+        "test_map.tmx"
+    ],
+    "tileset.embedInMap": true
+}
