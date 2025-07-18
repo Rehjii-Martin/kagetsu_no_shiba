@@ -100,14 +100,19 @@ kagetsu-no-shiba/
 
 Getting Started
 1. Clone and Navigate
-bash
+```bash
 
 git clone https://github.com/Rehjii-Martin/kagetsu_no_shiba.git
+
 cd kagetsu_no_shiba
+```
+
 2. Install Dependencies (optional)
-bash
+``` bash
 
 pip install pygame pytmx
+```
+
 3. Run the Game
 
 ``` bash
