@@ -42,7 +42,7 @@ This project isn't just a clone — it's a **spiritual successor** with a unique
 - Supports **Tiled-based `.tmx` maps** via pytmx.
 - Walls defined in "Collision Layer" block player and projectile movement.
 - **Camera smoothly follows the player**, supports `Z`/`X` to zoom in/out.
-- **Explosions animate** at projectile impact points (placeholder art currently used).
+
 
 ### 📊 HUD Interface
 - Health and energy bars shown on screen.
