@@ -65,7 +65,7 @@ This project isn't just a clone — it's a **spiritual successor** with a unique
 
 ---
 
-## Tech Stack
+## Tech Stacks
 
 - **Python 3.13**
     
