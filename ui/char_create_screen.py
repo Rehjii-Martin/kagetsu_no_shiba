@@ -33,7 +33,7 @@ class CharacterCreateScreen:
 
         # No movement
         fake_keys = collections.defaultdict(lambda: False)
-        self.preview.update(fake_keys, dt, pygame.Rect(0, 0, 800, 600))
+        self.preview.update(fake_keys, dt, pygame.Rect(0, 0, 800, 600), [], override_animation=True)
 
         for event in events:
             if event.type == pygame.KEYDOWN:

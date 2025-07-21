@@ -112,7 +112,7 @@ class Player:
             pygame.Rect(index * self.FRAME_WIDTH, 0, self.FRAME_WIDTH, self.FRAME_HEIGHT)
         ))
 
-    def update(self, keys, dt, map_rect, collision_rects):
+    def update(self, keys, dt, map_rect, collision_rects, override_animation=False):
         dx = dy = 0
         moving = False
 
@@ -146,7 +146,9 @@ class Player:
         self.rect.clamp_ip(map_rect)
 
 
-        if moving:
+        if override_animation:
+            pass  # Skip animation logic — using manual preview
+        elif moving:
             self.frame_timer += dt
             if self.frame_timer >= self.frame_duration:
                 self.frame_index = (self.frame_index + 1) % self.FRAMES_PER_DIR
@@ -213,10 +215,11 @@ class Player:
         sprite = self.image
         screen_pos = self.rect if camera is None else camera.apply(self.rect)
 
+        zoom = camera.zoom if camera else 1.0
         
         zoomed_sprite = pygame.transform.scale(sprite, (
-            int(sprite.get_width() * camera.zoom),
-            int(sprite.get_height() * camera.zoom)
+            int(sprite.get_width() * zoom),
+            int(sprite.get_height() * zoom)
         ))
 
         draw_x = int(screen_pos.centerx - zoomed_sprite.get_width() // 2)
