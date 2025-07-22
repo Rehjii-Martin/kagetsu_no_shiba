@@ -32,7 +32,7 @@ class Camera:
         else:
             self.offset_y = desired_y
 
-        print(f"[CAMERA] Offset: ({self.offset_x:.1f}, {self.offset_y:.1f}) | Zoom: {self.zoom:.2f}")
+       # print(f"[CAMERA] Offset: ({self.offset_x:.1f}, {self.offset_y:.1f}) | Zoom: {self.zoom:.2f}")
 
     def apply(self, rect):
         return pygame.Rect(
@@ -46,4 +46,7 @@ class Camera:
         return int((x - self.offset_x) * self.zoom), int((y - self.offset_y) * self.zoom)
 
     def set_zoom(self, zoom_amount):
-        self.zoom = max(self.min_zoom, min(self.max_zoom, zoom_amount))
+        allowed_zooms = [0.5, 1.0, 1.5, 2.0]
+        closest = min(allowed_zooms, key=lambda z: abs(z - zoom_amount))
+        self.zoom = closest
+

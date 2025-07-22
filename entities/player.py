@@ -2,7 +2,7 @@ import os
 import pygame
 from core.projectile import Projectile
 
-class Player:
+class Player(pygame.sprite.Sprite):
     FRAME_WIDTH = 32  
     FRAME_HEIGHT = 64
     FRAMES_PER_DIR = 6
@@ -36,6 +36,7 @@ class Player:
         offset_x = (self.FRAME_WIDTH - hitbox_width) // 2
         offset_y = self.FRAME_HEIGHT - hitbox_height
 
+        super().__init__()
         self.rect = pygame.Rect(x + offset_x, y + offset_y, hitbox_width, hitbox_height)
         self.speed = 100
 

@@ -4,13 +4,6 @@ from core.explosion import Explosion
 
 class Projectile(pygame.sprite.Sprite):
     def __init__(self, *groups, start_pos=None, direction=None, speed=800, max_range=800, image_path=None, **kwargs):
-        """
-        start_pos   = (x, y) center where the blast spawns
-        direction   = (dx, dy) should be normalized (length 1)
-        speed       = pixels per second
-        max_range   = how many pixels it can travel before disappearing
-        image_path  = optional path to a sprite; if None, draws a circle
-        """
         super().__init__()
         if start_pos is None or direction is None:
             raise ValueError("start_pos and direction must be provided")
@@ -50,7 +43,6 @@ class Projectile(pygame.sprite.Sprite):
         self.y += dy_pixels
         self.travelled += math.hypot(dx_pixels, dy_pixels)
 
-        # Always shift the rect to match the tip of the image
         if not self.is_circle:
             tip_offset = 12
             shift_x = -self.dx * tip_offset
@@ -60,26 +52,35 @@ class Projectile(pygame.sprite.Sprite):
             self.rect.center = (int(self.x), int(self.y))
 
         if self.travelled >= self.max_range:
-            if explosions_group:
+            if explosions_group is not None:
                 explosions_group.add(Explosion(self.x, self.y))
             self.kill()
             return
 
-        if walls_group and any(self.rect.colliderect(r) for r in walls_group):
-            if explosions_group:
-                explosions_group.add(Explosion(self.x, self.y))
-            self.kill()
-            return
+        if walls_group:
+            for wall in walls_group:
+                if self.rect.colliderect(wall.rect):
+                    print(f"[COLLISION] Projectile hit wall at {wall.rect}")
+                    if explosions_group is not None:
+                        # if you want a slower/faster animation, pass it as the 3rd positional arg:
+                        # e.g. frame_duration=0.1 would be Explosion(x, y, 0.1)
+                        explosions_group.add(Explosion(self.rect.centerx,
+                                                      self.rect.centery,
+                                                      0.08))
+                    self.kill()
+                    return
+            else:
+                print(f"[DEBUG] Projectile at {self.rect.center} did not collide with any wall.")
 
+      
         if enemies_group:
             hit = pygame.sprite.spritecollide(self, enemies_group, False)
             for enemy in hit:
                 enemy.take_damage(10)
-                if explosions_group:
-                    explosions_group.add(Explosion(self.x, self.y))
+                if explosions_group is not None:
+                    explosions_group.add(Explosion(self.rect.centerx, self.rect.centery))
                 self.kill()
                 return
-
 
     def draw(self, screen, cam_x=0, cam_y=0, zoom=1.0):
         screen_x = int((self.x - cam_x) * zoom)
