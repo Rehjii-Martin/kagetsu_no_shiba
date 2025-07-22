@@ -54,47 +54,49 @@ class Enemy(pygame.sprite.Sprite):
         self.rect  = self.image.get_rect(center=(x, y))
 
     def update(self, dt, collision_rects=None, map_rect=None):
-        # 1) random‐walk direction change
+        moved = False
+
+        # 1) random-walk direction change (timer-based)
         self.change_dir_timer -= dt
         if self.change_dir_timer <= 0:
             self.direction = random.choice(self.DIRECTIONS)
-            self.change_dir_timer = random.uniform(1.0, 3.0)
+            self.change_dir_timer = random.uniform(1.0, 2.0)
 
-        # 2) attempt to move
         vx, vy = self.dir_vectors[self.direction]
         dx = vx * self.speed * dt
         dy = vy * self.speed * dt
 
-        # horizontal
+        # 2) attempt to move (horizontal first)
         nr = self.rect.move(dx, 0)
         if not collision_rects or not any(nr.colliderect(r) for r in collision_rects):
             self.x += dx
             self.rect.x = int(self.x)
-        else:
-            # bounce off wall
-            self.direction = random.choice(self.DIRECTIONS)
-            self.change_dir_timer = random.uniform(1.0, 3.0)
+            moved = True
 
-        # vertical
         nr = self.rect.move(0, dy)
         if not collision_rects or not any(nr.colliderect(r) for r in collision_rects):
             self.y += dy
             self.rect.y = int(self.y)
-        else:
-            self.direction = random.choice(self.DIRECTIONS)
-            self.change_dir_timer = random.uniform(1.0, 3.0)
+            moved = True
 
-        # clamp to map bounds
+        # If stuck, don’t jitter — let timer expire before turning
+        if not moved:
+            self.change_dir_timer -= dt
+
+        # 3) clamp to map and sync
         if map_rect:
             self.rect.clamp_ip(map_rect)
             self.x, self.y = float(self.rect.x), float(self.rect.y)
 
-        # 3) animation
-        self.frame_timer += dt
-        if self.frame_timer >= self.frame_duration:
-            self.frame_timer -= self.frame_duration
-            self.frame_index = (self.frame_index + 1) % len(self.animations[self.direction])
-            self.image = self.animations[self.direction][self.frame_index]
+        # 4) animate only if moving
+        if moved:
+            self.frame_timer += dt
+            if self.frame_timer >= self.frame_duration:
+                self.frame_timer -= self.frame_duration
+                self.frame_index = (self.frame_index + 1) % len(self.animations[self.direction])
+                self.image = self.animations[self.direction][self.frame_index]
+        else:
+            self.image = self.idles[self.direction]
 
     def take_damage(self, amount):
         self.health -= amount
