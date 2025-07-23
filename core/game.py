@@ -2,10 +2,10 @@
 import pygame
 from entities.player import Player
 from core.projectile import Projectile
-from ui.login_screen import LoginScreen
-from ui.char_select_screen import CharacterSelectScreen
-from ui.char_create_screen import CharacterCreateScreen
-from ui.hud_screen import HUDScreen
+from ui.screens.login_screen import LoginScreen
+from ui.screens.char_select_screen import CharacterSelectScreen
+from ui.screens.char_create_screen import CharacterCreateScreen
+from ui.screens.hud_screen import HUDScreen
 
 class Game:
     def __init__(self, screen):
@@ -22,7 +22,7 @@ class Game:
             "char_select": CharacterSelectScreen(self),
             "char_create": CharacterCreateScreen(self),
             # UPDATED to pass map dimensions and tmx_data to the HUD
-            "hud": HUDScreen(self, self.map_width, self.map_height, tmx_data=None),
+            "hud": HUDScreen(self),
         }
         self.current_screen_name = "login"
 

@@ -12,11 +12,11 @@
             "scaleInDock": 0.75
         },
         "test_map.tmx": {
-            "scale": 0.125,
-            "selectedLayer": 0,
+            "scale": 0.33,
+            "selectedLayer": 2,
             "viewCenter": {
-                "x": 164,
-                "y": 1204
+                "x": 786.3636363636364,
+                "y": 896.969696969697
             }
         },
         "test_map.tmx#Interesting Interiors": {
@@ -53,8 +53,8 @@
     ],
     "project": "KNG_0.tiled-project",
     "recentFiles": [
-        "test_map2.tmx",
-        "test_map.tmx"
+        "test_map.tmx",
+        "test_map2.tmx"
     ],
     "tileset.embedInMap": true,
     "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)"

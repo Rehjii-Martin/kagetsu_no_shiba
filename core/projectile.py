@@ -13,6 +13,7 @@ class Projectile(pygame.sprite.Sprite):
         self.max_range = max_range
         self.travelled = 0
         self.is_circle = False
+        self.from_enemy = kwargs.get("from_enemy", False)
 
         if image_path is None:
             image_path = os.path.join("assets", "projectiles", "default_blast.png")
@@ -73,7 +74,7 @@ class Projectile(pygame.sprite.Sprite):
                 print(f"[DEBUG] Projectile at {self.rect.center} did not collide with any wall.")
 
       
-        if enemies_group:
+        if enemies_group and not self.from_enemy:
             hit = pygame.sprite.spritecollide(self, enemies_group, False)
             for enemy in hit:
                 enemy.take_damage(10)
@@ -81,6 +82,7 @@ class Projectile(pygame.sprite.Sprite):
                     explosions_group.add(Explosion(self.rect.centerx, self.rect.centery))
                 self.kill()
                 return
+
 
     def draw(self, screen, cam_x=0, cam_y=0, zoom=1.0):
         screen_x = int((self.x - cam_x) * zoom)

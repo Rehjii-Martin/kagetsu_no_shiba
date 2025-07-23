@@ -9,6 +9,7 @@
  <tileset firstgid="492" name="interiors_2" tilewidth="32" tileheight="32" tilecount="1424" columns="16">
   <image source="Modern tiles_Free/Interiors_free/32x32/Interiors_free_32x32.png" width="512" height="2848"/>
  </tileset>
+ <tileset firstgid="1916" source="Terrain.tsx"/>
  <layer id="2" name="Floors" width="50" height="50">
   <data encoding="csv">
 152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,
