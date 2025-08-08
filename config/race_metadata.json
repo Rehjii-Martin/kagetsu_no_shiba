@@ -1,0 +1,22 @@
+{
+  "Saiyan": {
+    "description": "Aggressive warriors with higher speed.",
+    "bonuses": "+10% melee; +10 speed",
+    "stats": { "max_health": 120, "max_energy": 90, "energy_recovery_rate": 8, "speed": 110 }
+  },
+  "Namekian": {
+    "description": "Resilient beings with strong vitality.",
+    "bonuses": "+20% health; +20% regen",
+    "stats": { "max_health": 140, "max_energy": 110, "energy_recovery_rate": 12, "speed": 90 }
+  },
+  "Android": {
+    "description": "Efficient energy cores and high capacity.",
+    "bonuses": "+100% max energy; +100% regen",
+    "stats": { "max_health": 100, "max_energy": 200, "energy_recovery_rate": 20, "speed": 85 }
+  },
+  "Shiba": {
+    "description": "Balanced all-rounders.",
+    "bonuses": "Balanced stats",
+    "stats": { "max_health": 110, "max_energy": 100, "energy_recovery_rate": 10, "speed": 100 }
+  }
+}

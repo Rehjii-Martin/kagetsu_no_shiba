@@ -1,0 +1,6 @@
+{
+  "ki": { "base": 10, "falloff_per_200": 2 },
+  "fire": { "base": 14, "falloff_per_200": 1 },
+  "ice": { "base": 8, "falloff_per_200": 0 },
+  "_default": { "base": 10 }
+}

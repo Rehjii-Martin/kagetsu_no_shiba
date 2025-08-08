@@ -1,4 +1,4 @@
-# core/ui/screens/hud_screen.py
+# /mnt/data/hud_screen.py  (core/ui/screens/hud_screen.py in your tree)
 import os, random, math, pygame, pytmx
 from typing import Optional
 from typing import cast
@@ -17,7 +17,10 @@ from ui.components.draggable_vitals_box import DraggableVitalsBox
 from ui.panels.skills  import SkillsPanel
 from ui.panels.vitals  import VitalsPanel
 from core.explosion import Explosion
-
+# from services.spawn_validator import SpawnValidator
+import json, urllib.request, urllib.error
+from services.chat_client import ChatClient
+import threading
 
 class Wall(pygame.sprite.Sprite):
     def __init__(self, rect: pygame.Rect):
@@ -26,7 +29,7 @@ class Wall(pygame.sprite.Sprite):
 
 
 class HUDScreen:
-    def __init__(self, game):
+    def __init__(self, game, player=None):
         self.game = game
 
         # ────────────────────── MAP / COLLISION ─────────────────────────────
@@ -55,28 +58,77 @@ class HUDScreen:
                 spawn_x, spawn_y = int(layer[0].x), int(layer[0].y)
                 break
         self.spawn_x, self.spawn_y = spawn_x, spawn_y
-        self.player = Player(spawn_x, spawn_y)
+
+        if player is not None:
+            # if a preview/created player is passed in, use it
+            self.player = player
+            # ensure they spawn at the map’s spawn
+            self.player.rect.topleft = (spawn_x, spawn_y)
+        else:
+            # fallback: create a default player
+            self.player = Player(spawn_x, spawn_y)
+
         self.draggable_vitals_box = DraggableVitalsBox(self.player)
+
+        # chat microservice client (proxy or teammate service)
+        self.chat_client = ChatClient(base_url="http://localhost:7004")
 
         # ────────────────────── ENEMIES & SYSTEMS ───────────────────────────
         self.enemies = pygame.sprite.Group()
+        self.players = pygame.sprite.Group()
+        self.players.add(self.player)
+
         self.explosion_system = ExplosionSystem()
-        self.projectile_system = ProjectileSystem(self.wall_sprites, self.enemies, self.explosion_system)
+        self.projectile_system = ProjectileSystem(
+            walls=self.wall_sprites,
+            enemies=self.enemies,
+            explosion_system=self.explosion_system,
+            players=self.players
+        )
+
         self.projectile_group: Optional[pygame.sprite.Group] = None
 
-        # random enemy spawns (avoid walls & player start)
-        attempts, want, min_dist = 30, 5, 150
-        while len(self.enemies) < want and attempts:
-            attempts -= 1
-            sx = random.randint(32, self.map_width  - 32)
-            sy = random.randint(32, self.map_height - 32)
-            test_rect = pygame.Rect(sx - 16, sy - 32, 32, 64)
-            clear = (not any(test_rect.colliderect(r) for r in self.collision_tiles)
-                     and math.hypot(sx - spawn_x, sy - spawn_y) >= min_dist)
-            if clear:
-                e = Enemy(sx, sy)
-                e.projectile_group = cast(pygame.sprite.Group, self.projectile_system.projectiles)
-                self.enemies.add(e)
+        # random enemy spawns (avoid walls & player start) via spawn microservice
+        want, min_dist = 5, 150
+        def _rects_to_payload(rects):
+            return [[r.x, r.y, r.width, r.height] for r in rects]
+
+        # Start async fetch to avoid blocking HUD init
+        self._pending_spawns = None
+        def _fetch_spawns_async():
+            try:
+                payload = json.dumps({
+                    "want": want,
+                    "map_width": self.map_width,
+                    "map_height": self.map_height,
+                    "collider_rects": _rects_to_payload(self.collision_tiles),
+                    "avoid_point": [spawn_x, spawn_y],
+                    "min_distance": min_dist
+                }).encode("utf-8")
+                req = urllib.request.Request(
+                    "http://localhost:7003/spawns/generate",
+                    data=payload,
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                with urllib.request.urlopen(req, timeout=0.5) as resp:
+                    data = json.loads(resp.read().decode("utf-8")) or {}
+                    self._pending_spawns = data.get("spawns", [])
+            except Exception:
+                self._pending_spawns = None
+        threading.Thread(target=_fetch_spawns_async, daemon=True).start()
+
+        # immediate fallback so HUD loads now
+        spawns = [(spawn_x + 200, spawn_y + 0),
+                  (spawn_x - 200, spawn_y + 0),
+                  (spawn_x + 0,   spawn_y + 200),
+                  (spawn_x + 0,   spawn_y - 200),
+                  (spawn_x + 140, spawn_y + 140)]
+
+        for (sx, sy) in spawns:
+            e = Enemy(sx, sy)
+            e.projectile_group = cast(pygame.sprite.Group, self.projectile_system.projectiles)
+            self.enemies.add(e)
 
         # controllers / helpers
         self.player_controller = PlayerController(self.player, self.collision_tiles, self.map_rect)
@@ -109,6 +161,14 @@ class HUDScreen:
             self.player_controller.update(dt, keys, self.projectile_system, self.chat_input_active)
 
         self.projectile_system.update(dt)
+
+        # If spawn service responded, add those spawns once
+        if getattr(self, "_pending_spawns", None) is not None and not getattr(self, "_pending_spawns_applied", False):
+            for (sx, sy) in (self._pending_spawns or []):
+                e = Enemy(sx, sy)
+                e.projectile_group = cast(pygame.sprite.Group, self.projectile_system.projectiles)
+                self.enemies.add(e)
+            self._pending_spawns_applied = True
         
         # check enemy‐shot projectiles against the player
         for p in list(self.projectile_system.projectiles):
@@ -134,6 +194,20 @@ class HUDScreen:
         self.tab_manager.handle_events(events)
         self.exit_dialog.handle_events(events)
 
+        # Forward clicks to SkillsPanel if active
+        active_tab = self.tab_manager.active
+        if active_tab == "Skills":
+            for ev in events:
+                if ev.type == pygame.MOUSEBUTTONDOWN and ev.button == 1:
+                    self.tab_panels["Skills"].handle_click(
+                        ev.pos,
+                        self.player,
+                        self.projectile_system,
+                        dt,
+                        self.collision_tiles,
+                        self.map_rect
+                    )
+
         input_box = pygame.Rect(400, 390, 500, 24)
         for ev in events:
             # ESC opens exit
@@ -156,9 +230,26 @@ class HUDScreen:
             # only when chat is active do we consume typing keys
             if ev.type == pygame.KEYDOWN and self.chat_input_active:
                 if ev.key == pygame.K_RETURN and self.chat_input.strip():
-                    self.chat_messages.append(f"[Player]: {self.chat_input.strip()}")
+                    msg = self.chat_input.strip()
+                    username = getattr(self.player, "name", "Player")
+                    # optimistic append, non-blocking
+                    self.chat_messages.append(f"[{username}]: {msg}")
+                    idx = len(self.chat_messages) - 1
                     self.chat_input = ""
                     self.chat_scroll = 0
+
+                    def _send_chat_async():
+                        result = self.chat_client.filter_and_log(username, msg)
+                        if not result.get("allowed", True):
+                            reason = result.get("reason") or "blocked"
+                            # replace optimistic line with block notice
+                            self.chat_messages[idx] = f"[system]: message blocked ({reason})"
+                        else:
+                            reason = str(result.get("reason") or "")
+                            if "microservice_unreachable" in reason:
+                                self.chat_messages[idx] += "  [unverified: chat filter offline]"
+                    threading.Thread(target=_send_chat_async, daemon=True).start()
+                
                 elif ev.key == pygame.K_BACKSPACE:
                     self.chat_input = self.chat_input[:-1]
                 elif ev.key == pygame.K_UP:

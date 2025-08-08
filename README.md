@@ -12,6 +12,10 @@ This project isn't just a clone — it's a **spiritual successor** with a unique
 
 ## 🕹️ Current Features
 
+## Video Demo
+
+
+
 ### ⚡ Ki Charging and Energy Blasts
 - **Hold `Spacebar`** to charge ki blasts.
 - Scales in **size, power, and energy cost** based on charge duration.

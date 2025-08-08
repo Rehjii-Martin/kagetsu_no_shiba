@@ -50,52 +50,48 @@ class LoginScreen:
                         self.password += event.unicode
 
     def draw(self, surface):
-        surface.fill((0, 0, 128))  # XP blue background
+        surface.fill((15, 15, 30))  # darker background
 
-        # XP login box
-        box = pygame.Rect(190, 180, 400, 290)
-        pygame.draw.rect(surface, (192, 192, 192), box)  # outer frame
-        pygame.draw.rect(surface, (255, 255, 255), box.inflate(-4, -4))  # white inner area
+        box = pygame.Rect(220, 180, 360, 260)
+        pygame.draw.rect(surface, (35, 35, 60), box, border_radius=12)
+        pygame.draw.rect(surface, (70, 70, 100), box, 2, border_radius=12)
 
-        # XP-style title bar
-        title_bar = pygame.Rect(box.x, box.y, box.width, 30)
-        pygame.draw.rect(surface, (10, 36, 106), title_bar)
-        title = self.font.render("Kagetsu No Shiba Login", True, (255, 255, 255))
-        surface.blit(title, (title_bar.x + 10, title_bar.y + 5))
+        title = self.font.render("Sign In to Kagetsu", True, (255, 255, 255))
+        surface.blit(title, (box.centerx - title.get_width() // 2, box.y + 15))
 
         # Username
-        surface.blit(self.label_font.render("Username:", True, (0, 0, 0)), (200, 245))
-        uname_box = pygame.Rect(280, 240, 240, 28)
-        pygame.draw.rect(surface, (255, 255, 255), uname_box)
-        pygame.draw.rect(surface, (0, 0, 0), uname_box, 1)
-        uname_text = self.font.render(self.username, True, (0, 0, 0))
-        surface.blit(uname_text, (uname_box.x + 6, uname_box.y + 3))
-
-        # Password
-        surface.blit(self.label_font.render("Password:", True, (0, 0, 0)), (200, 295))
-        pass_box = pygame.Rect(280, 290, 240, 28)
-        pygame.draw.rect(surface, (255, 255, 255), pass_box)
-        pygame.draw.rect(surface, (0, 0, 0), pass_box, 1)
-        pass_hidden = "*" * len(self.password)
-        pass_text = self.font.render(pass_hidden, True, (0, 0, 0))
-        surface.blit(pass_text, (pass_box.x + 6, pass_box.y + 3))
+        uname_label = self.label_font.render("Username", True, (200, 200, 200))
+        uname_box = pygame.Rect(250, 230, 300, 30)
+        pygame.draw.rect(surface, (255, 255, 255), uname_box, border_radius=6)
+        pygame.draw.rect(surface, (50, 50, 80), uname_box.inflate(-4, -4), border_radius=6)
+        surface.blit(uname_label, (uname_box.x, uname_box.y - 20))
+        uname_text = self.font.render(self.username, True, (255, 255, 255))
+        surface.blit(uname_text, (uname_box.x + 8, uname_box.y + 4))
 
         # Cursor
         if self.active_field == "username" and self.cursor_visible:
-            cursor_x = uname_box.x + 6 + uname_text.get_width()
-            pygame.draw.line(surface, (0, 0, 0), (cursor_x, uname_box.y + 4), (cursor_x, uname_box.y + 24), 2)
-        elif self.active_field == "password" and self.cursor_visible:
-            cursor_x = pass_box.x + 6 + pass_text.get_width()
-            pygame.draw.line(surface, (0, 0, 0), (cursor_x, pass_box.y + 4), (cursor_x, pass_box.y + 24), 2)
+            cursor_x = uname_box.x + 8 + uname_text.get_width()
+            cursor_y = uname_box.y + (uname_box.height - uname_text.get_height()) // 2
+            pygame.draw.line(surface, (255, 255, 255), (cursor_x, cursor_y), (cursor_x, cursor_y + uname_text.get_height()), 2)
 
-        # XP-style button
-        sign_in_button = pygame.Rect(280, 340, 240, 30)
-        pygame.draw.rect(surface, (192, 192, 192), sign_in_button)
-        pygame.draw.rect(surface, (0, 0, 0), sign_in_button, 1)
-        btn_label = self.font.render("Sign In", True, (0, 0, 0))
+        # Password
+        pass_label = self.label_font.render("Password", True, (200, 200, 200))
+        pass_box = pygame.Rect(250, 280, 300, 30)
+        pygame.draw.rect(surface, (255, 255, 255), pass_box, border_radius=6)
+        pygame.draw.rect(surface, (50, 50, 80), pass_box.inflate(-4, -4), border_radius=6)
+        surface.blit(pass_label, (pass_box.x, pass_box.y - 20))
+        pass_hidden = "*" * len(self.password)
+        pass_text = self.font.render(pass_hidden, True, (255, 255, 255))
+        surface.blit(pass_text, (pass_box.x + 8, pass_box.y + 4))
+
+        if self.active_field == "password" and self.cursor_visible:
+            cursor_x = pass_box.x + 8 + pass_text.get_width()
+            cursor_y = pass_box.y + (pass_box.height - pass_text.get_height()) // 2
+            pygame.draw.line(surface, (255, 255, 255), (cursor_x, cursor_y), (cursor_x, cursor_y + pass_text.get_height()), 2)
+
+        # Button
+        sign_in_button = pygame.Rect(250, 340, 300, 36)
+        pygame.draw.rect(surface, (80, 140, 240), sign_in_button, border_radius=6)
+        btn_label = self.font.render("Sign In", True, (255, 255, 255))
         surface.blit(btn_label, (sign_in_button.centerx - btn_label.get_width() // 2,
                                 sign_in_button.centery - btn_label.get_height() // 2))
-
-        # Info
-        info = self.font.render("[ENTER] or click Sign In", True, (10, 10, 10))
-        surface.blit(info, (box.centerx - info.get_width() // 2, box.y + box.height - 40))

@@ -2,6 +2,7 @@
 import os, random, math, pygame
 from typing import Optional
 from core.projectile import Projectile
+from entities.player import Player
 
 # tunables
 CHASE_RADIUS, ATTACK_RADIUS, LOSE_RADIUS = 220, 160, 280
@@ -70,8 +71,8 @@ class Enemy(pygame.sprite.Sprite):
         elif self.state == "chase":
             moved = self._chase(dt, px, py, collision_rects, map_rect, self.speed)
         else:  # attack
-            moved = self._chase(dt, px, py, collision_rects, map_rect, self.speed * 0.5)
-            self._shoot(px, py)
+            moved = self._chase(dt, px, py, collision_rects, map_rect, self.speed)
+            self._shoot(player)  # now passes full Player object
 
         self._animate(dt, moved)
 
@@ -87,63 +88,68 @@ class Enemy(pygame.sprite.Sprite):
     def _chase(self, dt, tx, ty, collision_rects, map_rect, speed):
         dx, dy = tx - self.rect.centerx, ty - self.rect.centery
         dist   = math.hypot(dx, dy)
-        max_step = speed * dt
+       
 
-        # ───── SNAP TO PLAYER IF WE'RE CLOSER THAN ONE FRAME'S STEP ─────
-        if dist <= max_step:
-            # force‐move directly onto the player
-            self.x, self.y = tx, ty
-            self.rect.center = (int(tx), int(ty))
-            return True
-
-        # ───── OTHERWISE, DO NORMAL DIAGONAL‐FIRST MOVE ────────────────
-        self.direction = ("right" if abs(dx) > abs(dy) and dx > 0 else
-                        "left"  if abs(dx) > abs(dy) else
-                        "down"  if dy > 0 else "up")
+        # ───── Free 360° movement ─────
         length = max(dist, 1e-6)
-        step_x = dx/length * speed * dt
-        step_y = dy/length * speed * dt
-        return self._move(step_x, step_y, collision_rects, map_rect)
+        step_x = dx / length * speed * dt
+        step_y = dy / length * speed * dt
 
+        # choose facing direction based on actual motion
+        if abs(dx) > abs(dy):
+            self.direction = "right" if dx > 0 else "left"
+        else:
+            self.direction = "down" if dy > 0 else "up"
+
+        return self._move(step_x, step_y, collision_rects, map_rect)
+    
     # ───────────── movement util ────────
     def _move(self, dx, dy, collision_rects, map_rect):
         old_center = self.rect.center
 
-        # try full move
-        if self._free(self.rect.move(dx, dy), collision_rects):
-            self.x += dx; self.y += dy
-        else:
-            # slide X then Y
-            if self._free(self.rect.move(dx, 0), collision_rects):
-                self.x += dx
-            if self._free(self.rect.move(0, dy), collision_rects):
-                self.y += dy
+        # Attempt horizontal movement
+        self.x += dx
+        self.rect.centerx = int(self.x)
+        if not self._free(self.rect, collision_rects):
+            self.x -= dx  # undo
+            self.rect.centerx = int(self.x)
 
-        # commit integer position & clamp
-        new_center = (int(self.x), int(self.y))
-        self.rect.center = new_center
+        # Attempt vertical movement
+        self.y += dy
+        self.rect.centery = int(self.y)
+        if not self._free(self.rect, collision_rects):
+            self.y -= dy  # undo
+            self.rect.centery = int(self.y)
+
+        # Clamp to map
         if map_rect:
             self.rect.clamp_ip(map_rect)
             self.x, self.y = float(self.rect.centerx), float(self.rect.centery)
 
-        # only “moved” if the onscreen center actually changed
-        return new_center != old_center
+        return self.rect.center != old_center
+
+
 
     def _free(self, rect, tiles):  # collision helper
         return (not tiles) or all(not rect.colliderect(t) for t in tiles)
 
     # ───────────── shooting ─────────────
-    def _shoot(self, px, py):
+    def _shoot(self, player: "Player"):
         if self.shoot_timer < SHOT_COOLDOWN or self.projectile_group is None:
             return
         self.shoot_timer = 0.0
-        dx, dy = px - self.rect.centerx, py - self.rect.centery
+        dx = player.rect.centerx - self.rect.centerx
+        dy = player.rect.centery - self.rect.centery
         length = max(math.hypot(dx, dy), 1e-6)
         direction = (dx / length, dy / length)
-        bullet = Projectile(start_pos=self.rect.center,
-                            direction=direction,
-                            speed=PROJECTILE_SPEED,
-                            from_enemy=True)
+        bullet = Projectile(
+            start_pos=self.rect.center,
+            direction=direction,
+            speed=PROJECTILE_SPEED,
+            from_enemy=True,
+            projectile_type="enemy",
+            owner=self
+        )
         self.projectile_group.add(bullet)
 
     # ───────────── visuals ──────────────

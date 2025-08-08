@@ -1,28 +1,25 @@
-# File: systems/projectile_system.py
 import pygame
 
-
 class ProjectileSystem:
-    def __init__(self, walls, enemies, explosion_system):
+    def __init__(self, walls, enemies, explosion_system, players=None):
         self.projectiles = pygame.sprite.Group()
         self.walls       = walls
         self.enemies     = enemies
+        self.players     = players
         self.explosions  = explosion_system.explosions
 
-    # external API
     def add(self, projectile):
         self.projectiles.add(projectile)
 
-    # frame update
     def update(self, dt):
         self.projectiles.update(
             dt,
             walls_group       = self.walls,
             enemies_group     = self.enemies,
+            players_group     = self.players,
             explosions_group  = self.explosions
         )
 
-    # draw all
     def draw(self, surface, camera):
         for p in self.projectiles:
             p.draw(surface,

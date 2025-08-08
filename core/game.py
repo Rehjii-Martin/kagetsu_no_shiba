@@ -10,25 +10,31 @@ from ui.screens.hud_screen import HUDScreen
 class Game:
     def __init__(self, screen):
         self.screen = screen
-        self.bg_color = (25, 25, 40) # A darker color for the background
+        self.bg_color = (25, 25, 40)  # A darker color for the background
 
         # ADD map/world dimensions
         self.map_width = 1600
         self.map_height = 1600
 
-        # Screens / States
+        # Store CLASSES here, not instances, so we can pass kwargs on demand
         self.screens = {
-            "login": LoginScreen(self),
-            "char_select": CharacterSelectScreen(self),
-            "char_create": CharacterCreateScreen(self),
-            # UPDATED to pass map dimensions and tmx_data to the HUD
-            "hud": HUDScreen(self),
+            "login": LoginScreen,
+            "char_select": CharacterSelectScreen,
+            "char_create": CharacterCreateScreen,
+            "hud": HUDScreen,
         }
-        self.current_screen_name = "login"
 
-    def set_screen(self, name):
-        if name in self.screens:
-            self.current_screen_name = name
+        # track name + active instance
+        self.current_screen_name = "login"
+        self.current_screen = self.screens[self.current_screen_name](self)
+
+    def set_screen(self, name, **kwargs):
+        if name not in self.screens:
+            return
+        self.current_screen_name = name
+        screen_cls = self.screens[name]
+        # (Re)create the screen instance each time so kwargs (e.g., player=...) can be used
+        self.current_screen = screen_cls(self, **kwargs)
 
     def update(self, dt):
         events = pygame.event.get()
@@ -36,11 +42,11 @@ class Game:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-
-        current_screen = self.screens[self.current_screen_name]
-        current_screen.update(dt, events)
+        # Always update the active instance
+        self.current_screen.update(dt, events)
 
     def draw(self):
         self.screen.fill(self.bg_color)
-        self.screens[self.current_screen_name].draw(self.screen)
+        # Always draw the active instance
+        self.current_screen.draw(self.screen)
         pygame.display.flip()
